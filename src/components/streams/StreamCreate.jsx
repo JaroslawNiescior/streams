@@ -3,18 +3,33 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Field, reduxForm } from 'redux-form';
+import { connect } from 'react-redux';
+import { createStream } from '../../actions';
 
 class StreamCreate extends React.Component {
-  onSubmit(formValues) {
-    console.log(formValues);
+  onSubmit = (formValues) => {
+    const { createStream: createStreamAction } = this.props;
+    createStreamAction(formValues);
   }
 
-  renderInput({ input, label, meta }) {
+  renderError({ error, touched }) {
+    if (touched && error) {
+      return (
+        <div className="ui error message">
+          <div className="header">{error}</div>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  renderInput = ({ input, label, meta }) => {
+    const componentClassName = `field ${meta.error && meta.touched ? 'error' : ''}`;
     return (
-      <div className="field">
+      <div className={componentClassName}>
         <label htmlFor="title" type="text">{label}</label>
         <input type="text" id="title" {...input} autoComplete="off" />
-        <div>{meta.error}</div>
+        <div>{this.renderError(meta)}</div>
       </div>
     );
   }
@@ -22,7 +37,7 @@ class StreamCreate extends React.Component {
   render() {
     const { handleSubmit } = this.props;
     return (
-      <form onSubmit={handleSubmit(this.onSubmit)} className="ui form">
+      <form onSubmit={handleSubmit(this.onSubmit)} className="ui form error">
         <Field name="title" component={this.renderInput} label="Enter Title" />
         <Field name="description" component={this.renderInput} label="Enter Description" />
         <button type="submit" className="ui button primary">Submit</button>
@@ -42,11 +57,18 @@ const validate = (formValues) => {
   return errors;
 };
 
-StreamCreate.propTypes = {
-  handleSubmit: PropTypes.func.isRequired,
+StreamCreate.defaultProps = {
+  createStream: null,
 };
 
-export default reduxForm({
+StreamCreate.propTypes = {
+  handleSubmit: PropTypes.func.isRequired,
+  createStream: PropTypes.func,
+};
+
+const formWrapped = reduxForm({
   form: 'streamCreate',
   validate,
 })(StreamCreate);
+
+export default connect(null, { createStream })(formWrapped);
